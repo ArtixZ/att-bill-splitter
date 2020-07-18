@@ -1,4 +1,5 @@
 export default {
 	USER: '',
-	PASSWORD: ''
+	PASSWORD: '',
+	MY_LAST_4_DIGITS: ''
 };
