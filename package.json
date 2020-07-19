@@ -1,15 +1,17 @@
 {
-  "name": "att",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Don Zhu",
-  "license": "ISC",
-  "dependencies": {
-    "mysql": "^2.18.1",
-    "puppeteer-core": "^5.1.0"
-  }
+	"name": "att",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Don Zhu",
+	"license": "ISC",
+	"dependencies": {
+		"mysql": "^2.18.1",
+		"promise-mysql": "^4.1.3",
+		"puppeteer-core": "^5.1.0"
+	},
+	"type": "module"
 }

@@ -1,51 +1,25 @@
-import sql from './db';
+import connection from './db.js';
 
 class User {
-	constructor(cb) {
-		this.errorcb = cb.errorcb;
-		this.createCallback = cb.create;
-		this.getAllCallback = cb.getAll;
-		this.getCallback = cb.get;
-	}
-
-	create({ name = '', phoneNumber, email = '' }) {
+	static create({ name = null, phoneNumber, email = null }) {
 		if (!phoneNumber) {
 			throw new Error('empty phone number!');
 		}
-		sql.query(
-			`INSERT INTO User (Name, PhoneNumer, Email) VALUES (${name}, ${phoneNumber}, ${email})`,
-			(err, res) => {
-				if (err) {
-					console.log(err);
-					this.errorcb('USER', 'CREATE', err);
-					return;
-				}
-				this.createCallback(res);
-			}
+		return connection.then((sql) =>
+			sql.query(`INSERT INTO User (Name, PhoneNumber, Email) VALUES (?, ?, ?)`, [ name, phoneNumber, email ])
 		);
 	}
 
-	getAll() {
-		sql.query(`SELECT * FROM User`, (err, res) => {
-			if (err) {
-				console.log(err);
-				this.errorcb('USER', 'GET', err);
-				return;
-			}
-			this.getAllCallback(res);
-		});
+	static getAll() {
+		return connection.then((sql) => sql.query(`SELECT * FROM User`));
 	}
 
-	get(phoneNumber) {
-		sql.query(`SELECT * FROM User where PhoneNumber=${phoneNumber}`, (err, res) => {
-			if (err) {
-				console.log(err);
-				this.errorcb('USER', 'GET', err);
-				return;
-			}
-			this.getCallback(res);
-		});
+	static get(phoneNumber) {
+		if (!phoneNumber) {
+			throw new Error('empty phone number!');
+		}
+		return connection.then((sql) => sql.query(`SELECT * FROM User where PhoneNumber=${phoneNumber}`));
 	}
 }
 
-module.exports = User;
+export default User;
