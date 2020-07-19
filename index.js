@@ -12,7 +12,7 @@ const TYPING_DELAY = 0;
 
 (async () => {
 	const browser = await puppeteer.launch({
-		headless: false,
+		headless: true,
 		slowMo: 250,
 		executablePath: PATH_TO_CHROME,
 		args: [ '--no-sandbox' ],
@@ -21,9 +21,11 @@ const TYPING_DELAY = 0;
 
 	const page = await browser.newPage();
 	page.setDefaultNavigationTimeout(60000);
+
 	await crawl(page);
 	console.log('Job Done! Closing browser');
 	await browser.close();
+	return;
 })();
 
 const crawl = async (page) => {
@@ -99,6 +101,7 @@ const login = async (page) => {
 	} catch (err) {
 		console.log('session timedout. trying to re-enter');
 	}
+	console.log('typing in password');
 	await page.type('input[name="password"]', PASSWORD, { delay: TYPING_DELAY });
 	await clickAndWait(page, 'button[type="submit"]');
 	await waitForSpinerDismiss(page);
