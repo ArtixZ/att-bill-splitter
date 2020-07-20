@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer-core';
 import readline from 'readline';
+import path from 'path';
 
 import BillModel from './models/Bill.model.js';
 import UserModel from './models/User.model.js';
@@ -15,12 +16,14 @@ const TYPING_DELAY = 0;
 		headless: true,
 		slowMo: 250,
 		executablePath: PATH_TO_CHROME,
-		args: [ '--no-sandbox' ],
-		userDataDir: './.userdata'
+		args: [ '--no-sandbox', `--user-data-dir=${path.resolve('./.userdata')}` ]
 	});
 
 	const page = await browser.newPage();
 	page.setDefaultNavigationTimeout(60000);
+	await page.setUserAgent(
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+	);
 
 	await crawl(page);
 	console.log('Job Done! Closing browser');
@@ -104,12 +107,12 @@ const login = async (page) => {
 	console.log('typing in password');
 	await page.type('input[name="password"]', PASSWORD, { delay: TYPING_DELAY });
 	await clickAndWait(page, 'button[type="submit"]');
-	await waitForSpinerDismiss(page);
 
 	try {
 		await page.waitForSelector('#your-code');
 		console.log('going to check 2FA code');
 	} catch (err) {
+		console.log("didn't see 2FA. logged in already");
 		return;
 	}
 
@@ -134,9 +137,10 @@ const crawlBills = async (page, recordedCount, { updateUsers, updateBills }) => 
 		".marTopBillHead.span4  form[name='dropdownForm'] .ng-scope.selectWrap > .selectWrapper > .awd-select-list.ddh-collapse > ul[role='menu'] > li"
 	);
 	list = list.reverse();
+	console.log(`already had ${recordedCount} bills stored`);
 
 	for (let i = recordedCount; i < list.length; i++) {
-		console.log(`working on the ${i}th bill`);
+		console.log(`--working on the ${i}th bill`);
 		await page.click(".marTopBillHead.span4  form[name='dropdownForm'] .selectbill_drop");
 		await list[i].click();
 		await waitForSpinerDismiss(page);
