@@ -16,7 +16,7 @@ const TYPING_DELAY = 0;
 		headless: true,
 		slowMo: 250,
 		executablePath: PATH_TO_CHROME,
-		args: [ '--no-sandbox', `--user-data-dir=${path.resolve('./.userdata')}` ]
+		args: [ '--no-sandbox', '--disable-setuid-sandbox', `--user-data-dir=${path.resolve('./.userdata')}` ]
 	});
 
 	const page = await browser.newPage();
