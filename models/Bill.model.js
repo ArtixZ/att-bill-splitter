@@ -16,6 +16,10 @@ class Bill {
 	static getCount() {
 		return connection.then((sql) => sql.query(`SELECT COUNT(DISTINCT EndDate) AS count FROM Bill`));
 	}
+
+	static getEndMonths() {
+		return connection.then((sql) => sql.query(`SELECT EndDate FROM Bill GROUP BY EndDate ORDER BY EndDate`));
+	}
 }
 
 export default Bill;

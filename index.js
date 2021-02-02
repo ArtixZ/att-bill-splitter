@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer-core';
 import readline from 'readline';
 import path from 'path';
+import moment from 'moment';
 
 import BillModel from './models/Bill.model.js';
 import UserModel from './models/User.model.js';
@@ -11,16 +12,24 @@ import PATH_TO_CHROME from './config/path_to_chromium.config.js';
 const { USER, PASSWORD, MY_LAST_4_DIGITS } = attConfig;
 const TYPING_DELAY = 0;
 
+// Chromium version 88 / 818858. download: https://commondatastorage.googleapis.com/chromium-browser-snapshots/index.html
+
 (async () => {
-	const browser = await puppeteer.launch({
-		headless: true,
-		slowMo: 250,
-		executablePath: PATH_TO_CHROME,
-		args: [ '--no-sandbox', '--disable-setuid-sandbox', `--user-data-dir=${path.resolve('./.userdata')}` ]
-	});
+	let browser;
+	try{
+		browser = await puppeteer.launch({
+			headless: false,
+			// slowMo: 250,
+			executablePath: PATH_TO_CHROME,
+			args: [ '--no-sandbox', '--disable-setuid-sandbox', `--user-data-dir=${path.resolve('./.userdata')}` ]
+		});
+	} catch(err) {
+		console.log(err);
+	}
+	
 
 	const page = await browser.newPage();
-	page.setDefaultNavigationTimeout(60000);
+	// page.setDefaultNavigationTimeout(60000);
 	await page.setUserAgent(
 		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
 	);
@@ -32,15 +41,17 @@ const TYPING_DELAY = 0;
 })();
 
 const crawl = async (page) => {
-	await login(page);
+	await authenticate(page);
 
-	const recordedBillCount = await BillModel.getCount();
+	// const recordedBillCount = await BillModel.getCount();
+
+	const endMonths = await BillModel.getEndMonths();
 
 	const existingUsers = await UserModel.getAll();
 
 	const updateUsersBound = updateUsers.bind(null, existingUsers);
 
-	await crawlBills(page, recordedBillCount[0].count, { updateBills, updateUsers: updateUsersBound });
+	await crawlBills(page, endMonths[endMonths.length-1], { updateBills, updateUsers: updateUsersBound });
 };
 
 const updateUsers = async (existingUsers, users) => {
@@ -86,11 +97,12 @@ const get2FACode = () => {
 
 const login = async (page) => {
 	console.log('================start logging in================');
-	await page.goto('https://www.att.com/my/#/login', { waitUntil: 'networkidle0' });
+	// await page.goto('https://www.att.com/my/#/login', { waitUntil: 'networkidle0' });
 	try {
 		await page.waitForSelector('input[name="password"]');
 	} catch (err) {
-		if ((await page.title()) === 'Account overview') {
+		const pagetitle = await page.title();
+		if (pagetitle === 'Account overview') {
 			console.log('logged in using session');
 			return;
 		} else {
@@ -102,7 +114,7 @@ const login = async (page) => {
 	try {
 		await page.type('input#userID', USER, { delay: TYPING_DELAY });
 	} catch (err) {
-		console.log('session timedout. trying to re-enter');
+		console.log('session timedout. trying to re-enter password');
 	}
 	console.log('typing in password');
 	await page.type('input[name="password"]', PASSWORD, { delay: TYPING_DELAY });
@@ -125,21 +137,50 @@ const login = async (page) => {
 	await page.type('input#codeValue', code, { delay: TYPING_DELAY });
 	await clickAndWait(page, 'input#submitCodeButton', 'networkidle0');
 	await waitForSpinerDismiss(page);
+}
+
+const authenticate = async (page) => {
+
+	await page.goto('https://www.att.com/my/#/viewBill', { waitUntil: 'networkidle0' }); // try to go to my bill first
+
+	try {
+		await page.waitForSelector('input[name="password"]');
+
+		await login(page);
+	} catch(err) {
+		console.log('already authenticated with session');
+		return;
+	}
+	
 };
 
-const crawlBills = async (page, recordedCount, { updateUsers, updateBills }) => {
+const findIdx = async (page, list, lastMonthEndDate) => {
+	const targetDate = moment(lastMonthEndDate);
+	return list.findIdx(async (element) => {
+		console.log(element);
+		const text = await page.evaluate(element => element.textContent, element);
+		return moment(text.split('-')[1]).isSame(targetDate);
+	})
+	
+}
+
+const crawlBills = async (page, lastMonthEndDate, { updateUsers, updateBills }) => {
 	console.log('================start crawling================');
 
 	//start crawling from index `recordedCount`
 	await page.goto('https://www.att.com/my/#/viewBill', { waitUntil: 'networkidle0' });
+	await waitForSpinerDismiss(page);
+
+	console.log(`last time billed to month: ${lastMonthEndDate}`);
 
 	let list = await page.$$(
 		".marTopBillHead.span4  form[name='dropdownForm'] .ng-scope.selectWrap > .selectWrapper > .awd-select-list.ddh-collapse > ul[role='menu'] > li"
 	);
 	list = list.reverse();
-	console.log(`already had ${recordedCount} bills stored`);
 
-	for (let i = recordedCount; i < list.length; i++) {
+	const idx = await findIdx(page, list, lastMonthEndDate);
+	
+	for (let i = idx; i < list.length; i++) {
 		console.log(`--working on the ${i}th bill`);
 		await page.click(".marTopBillHead.span4  form[name='dropdownForm'] .selectbill_drop");
 		await list[i].click();
