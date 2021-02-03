@@ -51,7 +51,11 @@ const crawl = async (page) => {
 
 	const updateUsersBound = updateUsers.bind(null, existingUsers);
 
-	await crawlBills(page, endMonths[endMonths.length-1], { updateBills, updateUsers: updateUsersBound });
+	if(endMonths[endMonths.length-1].EndDate) {
+		await crawlBills(page, endMonths[endMonths.length-1].EndDate, { updateBills, updateUsers: updateUsersBound });
+	} else {
+		throw new Error("no end month date");
+	}
 };
 
 const updateUsers = async (existingUsers, users) => {
