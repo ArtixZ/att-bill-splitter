@@ -1,5 +1,17 @@
 {
     "host": "***-***-****",
     "username": "",
-    "password": ""
+    "password": "",
+    "users": [
+        {
+            "phoneNumer": "***-***-****",
+            "notifyEmail": "abc@gmail.com"
+        },
+        {
+            "phoneNumer": "***-***-****",
+            "notifyEmail": "abc@gmail.com"
+        },
+        
+        ...
+    ]
 }
