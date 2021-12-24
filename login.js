@@ -1,81 +1,27 @@
-const fs = require("fs").promises;
-const path = require("path");
-const readline = require('readline');
+// const fs = require("fs").promises;
+// const path = require("path");
 
+async function login(page, username, password) {
+    await page.waitForSelector("input[autocomplete='current-password']", { visible: true, timeout: 0 });
 
-async function login(page, username, password, host) {
+    await Promise.any([
+        Promise.resolve(async () =>  await page.waitForSelector("div.expandedIdArea", { visible: true, timeout: 0 })),
+        Promise.resolve(async () => {
+            await page.focus("input[autocomplete='username']");
+            await page.keyboard.type(username);
+        })
+    ])
     // todo - username might stored.
-    await page.focus("#username");
-    await page.keyboard.type(username);
+    
 
-    await page.focus("#password");
+    await page.focus("input[autocomplete='current-password']");
     await page.keyboard.type(password);
 
-    await page.click("button#signin");
-
-    const mfa = await Promise.any([
-        requireNotMFA(page),
-        requireMFA(page)
-    ]);
-
-    if(mfa === "required") {
-        await getMFA(page, host);
-    }
+    await page.click("button[type='submit']");
 
     return;
     
 }
 
-async function requireNotMFA(page) {
-    await page.waitForFunction(() => {
-        return window.location.href === "https://www.att.com/";
-    })
-
-    return "not_required";
-}
-
-async function requireMFA(page) {
-    await page.waitForFunction(() => {
-        return window.location.href.startsWith("https://signin.att.com/dynamic/iamLRR/LrrController?IAM_OP=OTP");
-    })
-
-    return "required";
-}
-
-async function getMFA(page, host) {
-    const [hostTile] = await page.$x(`//div[@id='radio-form-container']/div[contains(., '${host}')]`);
-    if (!hostTile) throw new Error("no host found in MFA!");
-
-    await hostTile.click();
-
-    await page.click("input#submitDest");
-
-    await page.waitForFunction(() => {
-        return !!document.querySelector("input#codeValue");
-    })
-
-    const mfaCode = await askQuestion("What's the MFA code from your phone?");
-
-    await page.focus("input#codeValue");
-    await page.keyboard.type(mfaCode);
-
-
-    await page.click("input#submitCodeButton");
-
-
-    
-    function askQuestion(query) {
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-
-        return new Promise(resolve => rl.question(query, ans => {
-            rl.close();
-            resolve(ans);
-        }))
-    }
-
-}
 
 module.exports = login;
