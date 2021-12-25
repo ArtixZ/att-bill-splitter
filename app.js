@@ -42,6 +42,7 @@ async function run(config) {
       "--disable-setuid-sandbox",
       "--disable-web-security",
     ],
+    userDataDir: path.join(__dirname, './.userDataDir')
   });
   const page = await browser.newPage();
   await page.setDefaultNavigationTimeout(0);
