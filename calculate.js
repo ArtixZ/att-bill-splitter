@@ -43,12 +43,13 @@ async function calculate(page, billObj, users) {
             // const command = `echo "Your AT&T monthly cost is $ ${cost}.  Please pay via Venmo. My Venmo account is attached." | mail -s "Test Subject" ${email} -A BillScreenShot.pdf -A myVenmo.jpeg`;
 
             const strIn = `Your AT&T monthly cost is $ ${cost}.  Please pay via Venmo. My Venmo account is attached.`
-            spawnSync("mail", ['-s', 'Test Subject', email, '-A', path.join(__dirname, 'BillScreenShot.pdf'), '-A', path.join(__dirname, 'myVenmo.jpeg')], {input: strIn})
-            .on('error', function(err) {
-                console.log(err);
+            try {
+                spawnSync("mail", ['-s', 'Test Subject', email, '-A', path.join(__dirname, 'BillScreenShot.pdf'), '-A', path.join(__dirname, 'myVenmo.jpeg')], {input: strIn})
+            } catch(err) {
+                console.log('Error on sending email', err);
                 throw err;
-            });
-
+            }
+            
             // const mailCMD = spawnSyn("mail", ['-s', 'Test Subject', email, '-A', path.join(__dirname, 'BillScreenShot.pdf'), '-A', path.join(__dirname, 'myVenmo.jpeg')])
             //                 .on('error', function(err) {
             //                     console.log(err);
