@@ -60,7 +60,7 @@ async function run(config) {
 
             await page.goto(LOGIN_URL, { waitUntil: "networkidle0" });
             
-            await page.waitForSelector('body input[aria-label]', { visible: true, timeout: 0 });
+            await page.waitForSelector('body [aria-controls]', { visible: true, timeout: 0 });
             await page.screenshot({ path: path.join(__dirname, "./screenshots/login-loaded.png") });
 
 
