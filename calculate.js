@@ -44,7 +44,7 @@ async function calculate(page, billObj, users) {
         if(email) {
             // const command = `echo "Your AT&T monthly cost is $ ${cost}.  Please pay via Venmo. My Venmo account is attached." | mail -s "Test Subject" ${email} -A BillScreenShot.pdf -A myVenmo.jpeg`;
 
-            const strIn = `Your AT&T monthly cost is >>>$${cost}<<<. \n\nPlease pay via Venmo. Both my Venmo account and billing PDF are attached. \n\nThanks, Dongyue`
+            const strIn = `Hello from Family Plan! \n\nYour AT&T monthly cost is >>>$${cost}<<<. \n\nPlease pay via Venmo. Both my Venmo account and billing PDF are attached. \n\nThanks, Dongyue`
             try {
                 spawnSync("mail", ['-s', 'Test Subject', email, '-A', path.join(__dirname, 'BillScreenShot.pdf'), '-A', path.join(__dirname, 'myVenmo.jpeg')], {input: strIn})
             } catch(err) {
