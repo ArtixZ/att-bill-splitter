@@ -34,8 +34,10 @@ async function calculate(page, billObj, users) {
     for(const phoneNum in individuals) {
 
         // spawn child process to send email. setup ssmtp in your machine: https://raspberry-projects.com/pi/software_utilities/email/ssmtp-to-send-emails.
-        const cost = Number(individuals[phoneNum].replace('$', '')) + Number(sharedAmount.replace('$', '')) / Object.keys(individuals).length;
-
+        const numOfLines = Object.keys(individuals).length;
+        let cost = Number(individuals[phoneNum].replace('$', '')) + Number(sharedAmount.replace('$', '')) / numOfLines;
+        cost = Math.ceil((cost + Number.EPSILON) * 100) / 100;
+        
         console.log(`${phoneNum} -- ${cost}`);
         const email = userEmailMap[phoneNum.replace(/[^0-9]/g, '')];
 
