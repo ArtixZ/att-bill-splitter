@@ -3,15 +3,17 @@ const readline = require('readline');
 
 async function isHomePage(page) {
     await page.waitForFunction(() => {
-        return window.location.href === "https://www.att.com/";
+    return window.location.href === "https://www.att.com/";
     })
 
     return "home";
 }
 
 async function isLoginPage(page) {
+
     await page.waitForFunction(() => {
-        return window.location.href.startsWith("https://signin.att.com/dynamic/iamLRR/LrrController?IAM_OP=login");
+
+    return window.location.href.startsWith("https://signin.att.com/dynamic/iamLRR/LrrController?IAM_OP=login");
     })
 
     return "login";
@@ -19,7 +21,7 @@ async function isLoginPage(page) {
 
 async function isMFAPage(page) {
     await page.waitForFunction(() => {
-        return window.location.href.startsWith("https://signin.att.com/dynamic/iamLRR/LrrController?IAM_OP=OTP");
+    return window.location.href.startsWith("https://signin.att.com/dynamic/iamLRR/LrrController?IAM_OP=OTP");
     })
 
     return "mfa";
@@ -27,7 +29,7 @@ async function isMFAPage(page) {
 
 async function isBillingPage(page) {
     await page.waitForFunction(() => {
-        return window.location.href === "https://www.att.com/acctmgmt/billandpay";
+    return window.location.href === "https://www.att.com/acctmgmt/billandpay";
     })
 
     return "billing";
@@ -46,7 +48,7 @@ async function getMFA(page, host) {
         return !!document.querySelector("input#codeValue");
     })
 
-    const mfaCode = await askQuestion("What's the MFA code from your phone?");
+    const mfaCode = await askQuestion("What's the MFA code from your phone? Enter:");
 
     await page.focus("input#codeValue");
     await page.keyboard.type(mfaCode);
@@ -62,7 +64,7 @@ async function getMFA(page, host) {
             output: process.stdout,
         });
 
-        return new Promise(resolve => rl.question(query, ans => {
+        return new Promise(resolve => rl.question(`\u001b[1;36m${query}\u001b[0m`, ans => {
             rl.close();
             resolve(ans);
         }))

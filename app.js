@@ -8,7 +8,7 @@ const calculate = require("./calculate.js");
 
 const config = require("./.config.json");
 
-const { isLoginPage, isHomePage, isMFAPage, isBillingPage, getMFA } = require("./utility");
+const { isHomePage, isMFAPage, isBillingPage, getMFA } = require("./utility");
 
 const LOGIN_URL = "https://signin.att.com";
 const BILLING_URL = "https://www.att.com/acctmgmt/billandpay";
@@ -45,23 +45,38 @@ async function run(config) {
   });
   const page = await browser.newPage();
   await page.setDefaultNavigationTimeout(0);
+  await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3738.0 Safari/537.36');
 
-  let curPage;
   try {
 
     // eslint-disable-next-line no-constant-condition
     while(true) {
         try {
-            await page.goto(LOGIN_URL);
-            await page.waitForSelector('body', { visible: true, timeout: 0 });
-            // await page.screenshot({ path: path.join(__dirname, "./screenshots/login-loaded.png") });
-            console.log("-------------now at login page------------");
+    // page.on('console', consoleObj => console.log(consoleObj.text()));
 
-            curPage = await Promise.any([
-              isLoginPage(page),
-              isHomePage(page)
-            ]);
-            if (curPage === "login") await login(page, username, password, host);
+            await page.emulateMediaType('screen');
+            console.log("-------------now going to login page------------");
+
+            await page.goto(LOGIN_URL, { waitUntil: "networkidle0" });
+            
+            await page.waitForSelector('body input[aria-label]', { visible: true, timeout: 0 });
+            await page.screenshot({ path: path.join(__dirname, "./screenshots/login-loaded.png") });
+
+
+            // try{
+            //   curPage = await Promise.any([
+            //     isLoginPage(page),
+            //     isHomePage(page)
+            //   ]);
+            // } catch (err) {
+            //   await page.screenshot({ path: path.join(__dirname, "./screenshots/login-error.png") });
+
+            // }
+            // await page.screenshot({ path: path.join(__dirname, "./screenshots/login-loaded.png") });
+            const pageURL = page.url()
+            if (pageURL.startsWith("https://signin.att.com/dynamic/iamLRR/LrrController?IAM_OP=login")) {
+              await login(page, username, password, host);
+            }
             
             break;
 
@@ -96,11 +111,19 @@ async function run(config) {
 }
 
 async function solveMFA(page, host) {
-  const curPage = await Promise.any([
-    isMFAPage(page),
-    isHomePage(page),
-    isBillingPage(page)
-  ]);
+
+  let curPage;
+  try {
+    curPage = await Promise.any([
+      isMFAPage(page),
+      isHomePage(page),
+      isBillingPage(page)
+    ]);
+  } catch (err) {
+    await page.screenshot({ path: path.join(__dirname, "./screenshots/mfa-failed.png") });
+    throw err;
+  }
+  
 
   if(curPage === "mfa") {
       await getMFA(page, host);
