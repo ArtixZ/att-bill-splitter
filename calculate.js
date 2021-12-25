@@ -1,4 +1,5 @@
-const { spawn } = require('child_process');
+const { spawnSync } = require('child_process');
+const path = require("path");
 
 async function calculate(page, billObj, users) {
     const {
@@ -41,8 +42,14 @@ async function calculate(page, billObj, users) {
         if(email) {
             // const command = `echo "Your AT&T monthly cost is $ ${cost}.  Please pay via Venmo. My Venmo account is attached." | mail -s "Test Subject" ${email} -A BillScreenShot.pdf -A myVenmo.jpeg`;
 
-            // const echoCMD = spawn("echo", [`Your AT&T monthly cost is $ ${cost}.  Please pay via Venmo. My Venmo account is attached.`]);
-            // const mailCMD = spawn("mail", ['-s', 'Test Subject', email, '-A', path.join(__dirname, 'BillScreenShot.pdf'), '-A', path.join(__dirname, 'myVenmo.jpeg')])
+            const strIn = `Your AT&T monthly cost is $ ${cost}.  Please pay via Venmo. My Venmo account is attached.`
+            spawnSync("mail", ['-s', 'Test Subject', email, '-A', path.join(__dirname, 'BillScreenShot.pdf'), '-A', path.join(__dirname, 'myVenmo.jpeg')], {input: strIn})
+            .on('error', function(err) {
+                console.log(err);
+                throw err;
+            });
+
+            // const mailCMD = spawnSyn("mail", ['-s', 'Test Subject', email, '-A', path.join(__dirname, 'BillScreenShot.pdf'), '-A', path.join(__dirname, 'myVenmo.jpeg')])
             //                 .on('error', function(err) {
             //                     console.log(err);
             //                     throw err;
@@ -50,7 +57,7 @@ async function calculate(page, billObj, users) {
 
             // echoCMD.stdout.pipe(mailCMD.stdin);
 
-            spawn('bash', [`./sendMail.sh ${cost} ${email}`]);
+            // spawn('bash', [`./sendMail.sh ${cost} ${email}`]);
         }
 
     }
